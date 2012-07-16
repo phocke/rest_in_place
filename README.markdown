@@ -101,36 +101,36 @@ to work: a URL, an object name and the attribute name. These are provided as
 follows:
 
 -   put attributes into the element, like this:
-    
+
         <span class="rest-in-place" data-url="/users/1" data-object="user" data-attribute="name">
           <%= @user.name %>
         </span>
-  
+
 -   if any of these attributes is missing, DOM parents of the element are searched
     for them. That means you can write something like:
-    
+
         <div data-object="user" data-url="/users/1">
           Name:  <span class="rest-in-place" data-attribute="name" ><%= @user.name %></span><br/>
           eMail: <span class="rest-in-place" data-attribute="email"><%= @user.email %></span>
         </div>
-    
+
 -   You can completely omit the url to use the current document's url.
     With proper RESTful controllers this should always work, the explicit
     url-attribute is for cases when you want to edit a resource that is
     displayed as part of a non-RESTful webpage.
-  
+
 -   Rails provides the dom_id helper that constructs a dom id out of an
     ActiveRecord for you. So, your HTML page may look like this:
-    
+
         <div id="<%= dom_id @user # == "user_1" %>">
           Name:  <span class="rest-in-place" data-attribute="name" ><%= @user.name %></span><br/>
           eMail: <span class="rest-in-place" data-attribute="email"><%= @user.email %></span>
         </div>
-    
+
     REST in Place recognizes dom_ids of this form and derives the object parameter
     from them, so that (with the current documents url used) you really only need
     to provide the attributes name in most cases.
-   
+
     **Note that a manually defined (in the element or in one of the parents)
     object always overrides dom_id recognition.**
 
@@ -138,7 +138,7 @@ follows:
     field, a textarea is also supported. To select a form type use the
     `data-formtype` attribute in the element and set it to the name of your
     formtype ( `input`, or `textarea` ).
-    
+
     To write your own form types, just extend the `RestInPlace.forms` object
     and select your new form type throught the `data-formtype` attribute.
 
@@ -148,13 +148,42 @@ restInPlace() on the jQuery object.
 
     $('.my-custom-class').restInPlace()
 
+
+=======
+Events
+------
+
+A REST in Place instance triggers four different events on the element that
+it's associated with:
+
+- `activate.rest-in-place` when starting the editing of the element.  
+  Triggering the event is the first thing that happens, before any processing
+  and form building takes place. That means uou can use this event to modify
+  the content of the element (for example to remove number/date formatting).
+- `success.rest-in-place` with the data retrieved from the server as an
+  extra parameter after a successful save on the server.  
+  This event is triggered at the very latest moment, after the element has
+  been restored with the data from the server. This means you can use the
+  event handler to further modify the data and overwrite the displayed value
+  (useful for number/date formatting for example).
+- `failure.rest-in-place` after an error occured
+- `update.rest-in-place` immediately before sending the update to the server
+- `abort.rest-in-place` when the user aborts the editing process.
+
+Bind to these events through the jQuery event mechanisms:
+
+    $('#my-editable-element').bind('success.rest-in-place', function(event, data){
+      console.log("Yay it worked! The new value is", data.whatever);
+    });
+
+
 Example
 =======
 
 Your routes.rb:
 
     resources :users
-  
+
 Your app/controllers/users_controller.rb:
 
     class UsersController < ApplicationController
